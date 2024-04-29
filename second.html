@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSV Chart</title>
+    <!-- CSS stylesheet links for Bootstrap and Chart.js -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- JS script links for Bootstrap, Chart.js and Jquery -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+    <script>
+    //global variable to store file
+      var file;
+      $(document).ready(function() {
+        // File input form
+        $("#csv-form").on("submit", function(e) {
+          e.preventDefault();
+          //get the file from input
+          file = document.getElementById("csv-file").files[0];
+          if (!file) {
+            alert("Please select a CSV file.");
+            return;
+          }
+
+          // Read the file
+          var reader = new FileReader();
+          reader.readAsText(file);
+
+          // When the file is loaded, process the data
+          reader.onload = function() {
+            // Get the data from the file
+            var data = reader.result;
+
+            // Split the data into rows
+            var rows = data.split("\n");
+
+            // Get the column names from the first row
+            var columns = rows[0].split(",");
+            //Create the form to select the x-axis and y-axis
+            var form = "<form>";
+            form += "<div class='form-group'>";
+            form += "<label>X-Axis</label>";
+            form += "<div class='form-check'>";
+            //Create radio button for each column name
+            for (var i = 0; i < columns.length; i++) {
+                form += "<input class='form-check-input x-axis-select' type='radio' name='x-axis' value='" + columns[i] + "' id='" + columns[i] + "'><label class='form-check-label' for='" + columns[i] + "'>" + columns[i] + "</label>";
+            }
+            form += "</div>";
+            form += "</div>";
+            form += "<div class='form-group'>";
+            form += "<label>Y-Axis</label>";
+            form += "<div class='form-check'>";
+            //Create radio button for each column name
+            for (var i = 0; i < columns.length; i++) {
+                form += "<input class='form-check-input y-axis-select' type='radio' name='y-axis' value='" + columns[i] + "' id='" + columns[i] + "'><label class='form-check-label' for='" + columns[i] + "'>" + columns[i] + "</label>";
+            }
+            form += "</div>";
+            form += "</div>";
+            form += "</form>";
+            //append the form after the first form
+            $("#csv-form").after(form);
+
+            //create the chart
+            var chart = document.createElement("canvas");
+            chart.setAttribute("id", "chart");
+            chart.setAttribute("width", "400");
+            chart.setAttribute("height", "400");
+            //append chart after the form
+            $("form").after(chart);
+
+            //disable the option that is selected in x-axis radio group in y-axis radio group
+            $(".x-axis-select").change(function() {
+                var value = $(this).val();
+                $(".y-axis-select[value='" + value + "']").attr("disabled", true);
+            });
+            
+            //enable the option that was previously selected in x-axis radio group when it is deselected
+            $(".x-axis-select").change(function() {
+                var value = $(this).val();
+                $(".y-axis-select[value='" + value + "']").attr("disabled", false);
+            });
+
+            //listen for changes in the y-axis radio group
+            $(".y-axis-select").change(function() {
+                var xValue = $(".x-axis-select:checked").val();
+                var yValue = $(".y-axis-select:checked").val();
+                //ajax call to get data to update chart
+                updateChart(xValue, yValue);
+            });
+
+            function updateChart(xValue, yValue) {
+                //process data and create chart here
+                //...
+                // Create a new chart
+                var ctx = document.getElementById("chart").getContext("2d");
+                var myChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: [/* x-axis data */],
+                        datasets: [{
+                            label: yValue,
+                            data: [/* y-axis data */],
+                            backgroundColor: [
+                                "rgba(255, 99, 132, 0.2)",
+                                "rgba(255, 99, 132, 0.2)",
+                                // more colors
+                            ],
+                            borderColor: [
+                                "rgba(255, 99, 132, 1)",
+                                "rgba(255, 99, 132, 1)",
+                                // more colors
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container h-100 d-flex justify-content-center">
+        <div class="row align-self-center w-50">
+            <form id="csv-form">
+                <div class="form-group">
+                    <label for="csv-file">Select CSV file</label>
+                    <input type="file" class="form-control-file" id="csv-file" accept=".csv">
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+  </body>
+</html>
